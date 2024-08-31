@@ -14,6 +14,8 @@ server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT"))  # type:ignore[a
 
 mysql = MySQL(server)
 
+JWT_SECRET = os.environ.get("JWT_SECRET")
+
 
 @server.route("/login", methods=["POST"])
 def login() -> str | tuple[str, int]:
@@ -32,10 +34,27 @@ def login() -> str | tuple[str, int]:
         if auth.password != password:
             return "invalid credentials", 401
         else:
-            return create_jwt(auth.username, os.environ.get("JWT_SECRET"), True)  # type:ignore[arg-type]
+            return create_jwt(auth.username, JWT_SECRET, True)  # type:ignore[arg-type]
     else:
         # user does not exist in the database
         return "invalid credentials", 401
+
+
+@server.route("/validate", methods=["POST"])
+def validate() -> tuple[str, int]:
+    encoded_jwt = request.headers["Authorization"]
+
+    if not encoded_jwt:
+        return "missing credentials", 401
+
+    encoded_jwt = encoded_jwt.split(" ")[1]
+
+    try:
+        decoded_jwt = jwt.decode(encoded_jwt, JWT_SECRET, algorithms=["HS256"])
+    except jwt.PyJWTError as e:
+        print(e)
+        return "not authorized", 403
+    return decoded_jwt, 200
 
 
 def create_jwt(username: str, secret: str, is_auth: bool) -> str:
