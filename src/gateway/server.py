@@ -40,7 +40,7 @@ def login() -> str | tuple[str, int]:
 
 
 @server.route("/upload", methods=["POST"])  # type:ignore[type-var]
-def upload() -> tuple[str, int] | None:
+def upload() -> tuple[str, int]:
     access, err = validate_token(request)
 
     if err:
@@ -56,7 +56,7 @@ def upload() -> tuple[str, int] | None:
             err = utils.upload(file, fs_video, channel, access_payload)
             if err:
                 return err
-        return None
+        return "success!", 200
     else:
         return "unauthorized", 401
 

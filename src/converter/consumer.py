@@ -3,11 +3,12 @@ import sys
 from typing import Any
 
 import pika
-from convert import to_mp3
 from gridfs import GridFS
 from pika import spec
 from pika.adapters.blocking_connection import BlockingChannel
 from pymongo import MongoClient
+
+from convert import to_mp3
 
 
 def main() -> Any:
