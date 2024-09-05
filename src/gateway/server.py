@@ -1,11 +1,11 @@
 import json
 import os
-from typing import Any
 
 import gridfs
 import pika
 import requests
-from flask import Flask, request
+from bson import ObjectId
+from flask import Flask, Response, request, send_file
 from flask_pymongo import PyMongo
 
 from auth.validation import validate_token
@@ -13,9 +13,12 @@ from storage import utils
 
 server = Flask(__name__)
 
-mongo_video = PyMongo(server, uri="mongodb://mongodb:27017/videos")
+mongo_videos = PyMongo(server, uri="mongodb://mongodb:27017/videos")
+mongo_mp3s = PyMongo(server, uri="mongodb://mongodb:27017/mp3s")
 
-fs_video = gridfs.GridFS(mongo_video.db)
+fs_videos = gridfs.GridFS(mongo_videos.db)
+fs_mp3s = gridfs.GridFS(mongo_mp3s.db)
+
 
 connection = pika.BlockingConnection(pika.ConnectionParameters(host="rabbitmq"))
 channel = connection.channel()
@@ -42,7 +45,6 @@ def login() -> str | tuple[str, int]:
 @server.route("/upload", methods=["POST"])  # type:ignore[type-var]
 def upload() -> tuple[str, int]:
     access, err = validate_token(request)
-
     if err:
         return err
 
@@ -53,7 +55,7 @@ def upload() -> tuple[str, int]:
         if not len(request.files) == 1:
             return "exactly 1 file required", 400
         for file in request.files.values():
-            err = utils.upload(file, fs_video, channel, access_payload)
+            err = utils.upload(file, fs_videos, channel, access_payload)
             if err:
                 return err
         return "success!", 200
@@ -62,7 +64,26 @@ def upload() -> tuple[str, int]:
 
 
 @server.route("/download", methods=["POST"])
-def download() -> Any: ...
+def download() -> tuple[str, int] | Response:
+    access, err = validate_token(request)
+    if err:
+        return err
+
+    assert access
+    access_payload = json.loads(access)
+
+    if access_payload["admin"]:
+        fid_string = request.args.get("fid")
+        if not fid_string:
+            return "fid is required", 400
+        try:
+            out = fs_mp3s.get(ObjectId(fid_string))
+            return send_file(out, download_name=f"{fid_string}.mp3")
+        except Exception as e:
+            print(e)
+            return "internal server error", 500
+    else:
+        return "unauthorized", 401
 
 
 if __name__ == "__main__":
