@@ -27,7 +27,7 @@ def main() -> None:
     channel.basic_consume(
         queue=os.environ.get("MP3_QUEUE"), on_message_callback=callback
     )
-    print("Waiting form messages. To exit press CTRL+C")
+    print("Waiting for messages. To exit press CTRL+C")
     channel.start_consuming()
 
 

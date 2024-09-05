@@ -20,7 +20,7 @@ def notifcation(message: bytes) -> None | str:
         email_msg["From"] = sender_address
         email_msg["To"] = receiver_address
 
-        session = smtplib.SMTP("smtmp.gmail.com")
+        session = smtplib.SMTP("smtmp.gmail.com", 587)
         session.starttls()
         session.login(sender_address, sender_password)
         session.send_message(email_msg, sender_address, receiver_address)
