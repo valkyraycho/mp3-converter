@@ -4,7 +4,6 @@ import sys
 import pika
 from pika import spec
 from pika.adapters.blocking_connection import BlockingChannel
-
 from send_email import notifcation
 
 

@@ -61,9 +61,8 @@ def create_jwt(username: str, secret: str, is_auth: bool) -> str:
     return jwt.encode(
         {
             "username": username,
-            "exp": datetime.datetime.now(tz=datetime.timezone.utc)
-            + datetime.timedelta(days=1),
-            "iat": datetime.datetime.now(tz=datetime.timezone.utc),
+            "exp": datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=1),
+            "iat": datetime.datetime.now(tz=datetime.UTC),
             "admin": is_auth,
         },
         secret,

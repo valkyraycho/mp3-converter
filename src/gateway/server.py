@@ -7,9 +7,9 @@ import requests
 from bson import ObjectId
 from flask import Flask, Response, request, send_file
 from flask_pymongo import PyMongo
+from storage import utils
 
 from auth.validation import validate_token
-from storage import utils
 
 server = Flask(__name__)
 
@@ -52,7 +52,7 @@ def upload() -> tuple[str, int]:
     access_payload = json.loads(access)
 
     if access_payload["admin"]:
-        if not len(request.files) == 1:
+        if len(request.files) != 1:
             return "exactly 1 file required", 400
         for file in request.files.values():
             err = utils.upload(file, fs_videos, channel, access_payload)
